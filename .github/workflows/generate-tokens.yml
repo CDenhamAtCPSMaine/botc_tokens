@@ -1,21 +1,16 @@
-# .github/workflows/generate-tokens.yml
-
 name: 'Build My Custom Tokens'
 
 on:
-  # 1. Allows you to run this workflow manually from the Actions tab
+  # Allows manual execution from the Actions tab
   workflow_dispatch:
 
-  # 2. Automatically runs the workflow when you push changes 
-  #    to your script or component files.
+  # Automatically runs when you push changes to key files
   push:
     branches:
       - 'main'
       - 'stable'
     paths:
-      # --- IMPORTANT ---
-      # These are the files in YOUR repo that the workflow depends on.
-      # If you change these names, update them here.
+      # Key files the workflow depends on
       - 'my_script.json'
       - 'my_reminders.json'
       - 'my_component_packs/**'
@@ -26,52 +21,53 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      # 1. Check out your repository's code
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
 
-      # 2. Set up Python
       - name: 'Set up Python 3.10'
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 3. Install ImageMagick (CRITICAL dependency)
+      # 1. Install ImageMagick (CRITICAL for Wand/image manipulation)
       - name: 'Install ImageMagick'
         run: |
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      # 4. Install the botc_tokens tool (from your repo's code)
+      # 2. PATCH THE WIKI LINK (Fixes the HTTP 404 Error)
+      # This replaces the broken 'main' branch link with the working 'stable' branch link
+      - name: 'Patch Wiki Soup File Path'
+        run: |
+          sed -i 's|Tsubashi/botc_tokens/main/src/botc_tokens/roles.json|Tsubashi/botc_tokens/stable/src/botc_tokens/roles.json|g' src/botc_tokens/helpers/wiki_soup.py
+
+      # 3. Install the botc_tokens tool (must run AFTER the patch)
       - name: 'Install Python Dependencies'
         run: |
           pip install .
 
-      # 5. Run 'botc_tokens update'
-      #    Uses YOUR reminders file from the root of your repo
+      # 4. Run 'botc_tokens update' to get core data, using YOUR reminders file
       - name: 'Run: botc_tokens update'
         run: |
           botc_tokens update \
             --output-dir ./inputs \
             --reminders ./my_reminders.json
 
-      # 6. Run 'botc_tokens create'
-      #    Uses YOUR component packs from your repo
+      # 5. Run 'botc_tokens create' to generate tokens, using YOUR component packs
       - name: 'Run: botc_tokens create'
         run: |
           botc_tokens create ./inputs \
             --output-dir ./tokens \
             --components ./my_component_packs
 
-      # 7. Run 'botc_tokens group'
-      #    Uses YOUR script file from the root of your repo
+      # 6. Run 'botc_tokens group' to arrange tokens into printable sheets, using YOUR script
       - name: 'Run: botc_tokens group'
         run: |
           botc_tokens group ./my_script.json \
             --token-dir ./tokens \
             --output-dir ./printables
 
-      # 8. Upload the final 'printables' folder as an artifact
+      # 7. Upload the final 'printables' folder as an artifact
       - name: 'Upload Printable Artifacts'
         uses: actions/upload-artifact@v4
         with:
