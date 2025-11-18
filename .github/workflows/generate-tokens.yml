@@ -39,7 +39,7 @@ jobs:
       # This replaces the old Tsubashi/botc_tokens link with the correct Tsubashi/botc_assets link.
       - name: 'Patch Wiki Soup File Path'
         run: |
-          sed -i 's|Tsubashi/botc_tokens/stable/src/botc_tokens/roles.json|Tsubashi/botc_assets/main/roles.json|g' src/botc_tokens/helpers/wiki_soup.py
+          sed -i 's|Tsubashi/botc_tokens/main/src/botc_tokens/roles.json|Tsubashi/botc_assets/main/roles.json|g' src/botc_tokens/helpers/wiki_soup.py
 
       # 3. Install the botc_tokens tool (must run AFTER the patch)
       - name: 'Install Python Dependencies'
