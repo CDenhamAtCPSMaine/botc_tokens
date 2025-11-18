@@ -35,11 +35,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y imagemagick
 
-      # 2. PATCH THE WIKI LINK (Fixes the HTTP 404 Error)
-      # This replaces the broken 'main' branch link with the working 'stable' branch link
+      # 2. PATCH THE WIKI LINK (Fixes the persistent HTTP 404 Error by pointing to the assets repo)
+      # This replaces the old Tsubashi/botc_tokens link with the correct Tsubashi/botc_assets link.
       - name: 'Patch Wiki Soup File Path'
         run: |
-          sed -i 's|Tsubashi/botc_tokens/main/src/botc_tokens/roles.json|Tsubashi/botc_tokens/stable/src/botc_tokens/roles.json|g' src/botc_tokens/helpers/wiki_soup.py
+          sed -i 's|Tsubashi/botc_tokens/stable/src/botc_tokens/roles.json|Tsubashi/botc_assets/main/roles.json|g' src/botc_tokens/helpers/wiki_soup.py
 
       # 3. Install the botc_tokens tool (must run AFTER the patch)
       - name: 'Install Python Dependencies'
