@@ -43,7 +43,7 @@ jobs:
         run: |
           cd botc_tokens
           mkdir -p assets
-          botc_tokens update --output-dir assets
+          botc_tokens update --script script.json --output-dir assets
 
       # STEP 2: CREATE (Generate token images)
       - name: Run create
