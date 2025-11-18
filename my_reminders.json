@@ -1,0 +1,16 @@
+{
+  "Minion": [
+    "Minion"
+  ],
+  "Baron": [
+    "Baron",
+    "Townsfolk",
+    "Outsider",
+    "Minion"
+  ],
+  "Artist": [
+    "Ability has not been used",
+    "Ability has been used"
+  ]
+  // ... Add entries for any role where reminders are incorrect or custom
+}
