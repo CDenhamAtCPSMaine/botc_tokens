@@ -1,0 +1,92 @@
+name: BotC Full Pipeline (Update → Create → Group)
+
+on:
+  workflow_dispatch:
+    inputs:
+      script_json:
+        description: "Custom script file (inside your repo). Leave empty to use example_script.json."
+        required: false
+        default: ""
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Clone the official botc_tokens code
+      - name: Clone botc_tokens
+        uses: actions/checkout@v4
+        with:
+          repository: Tsubashi/botc_tokens
+          path: botc_tokens
+
+      # Install Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Install ImageMagick required by Wand
+      - name: Install ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+      # Install the botc_tokens package
+      - name: Install botc_tokens
+        run: |
+          cd botc_tokens
+          pip install .
+
+      # STEP 1: UPDATE (Download assets)
+      - name: Run update
+        run: |
+          cd botc_tokens
+          mkdir -p assets
+          botc_tokens update --output-dir assets
+
+      # STEP 2: CREATE (Generate token images)
+      - name: Run create
+        run: |
+          cd botc_tokens
+          mkdir -p tokens
+          botc_tokens create assets -o tokens
+
+      # STEP 3: GROUP (Create printable sheets)
+      - name: Run group
+        run: |
+          cd botc_tokens
+          mkdir -p printables
+
+          # If user provided a script JSON path, use it
+          if [ "${{ github.event.inputs.script_json }}" != "" ]; then
+            botc_tokens group "${{ github.event.inputs.script_json }}" \
+              --token-dir tokens \
+              --output-dir printables
+          else
+            # fallback to example_script.json
+            botc_tokens group example_script.json \
+              --token-dir tokens \
+              --output-dir printables
+          fi
+
+      # Upload downloaded assets
+      - name: Upload assets
+        uses: actions/upload-artifact@v5
+        with:
+          name: botc_assets
+          path: botc_tokens/assets/**
+
+      # Upload generated token images
+      - name: Upload tokens
+        uses: actions/upload-artifact@v5
+        with:
+          name: botc_tokens
+          path: botc_tokens/tokens/**
+
+      # Upload printable grouped sheets
+      - name: Upload printables
+        uses: actions/upload-artifact@v5
+        with:
+          name: botc_printables
+          path: botc_tokens/printables/**
