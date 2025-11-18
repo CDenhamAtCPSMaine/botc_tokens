@@ -1,0 +1,79 @@
+# .github/workflows/generate-tokens.yml
+
+name: 'Build My Custom Tokens'
+
+on:
+  # 1. Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # 2. Automatically runs the workflow when you push changes 
+  #    to your script or component files.
+  push:
+    branches:
+      - 'main'
+      - 'stable'
+    paths:
+      # --- IMPORTANT ---
+      # These are the files in YOUR repo that the workflow depends on.
+      # If you change these names, update them here.
+      - 'my_script.json'
+      - 'my_reminders.json'
+      - 'my_component_packs/**'
+      - '.github/workflows/generate-tokens.yml'
+
+jobs:
+  build-tokens:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Check out your repository's code
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: 'Set up Python 3.10'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. Install ImageMagick (CRITICAL dependency)
+      - name: 'Install ImageMagick'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+      # 4. Install the botc_tokens tool (from your repo's code)
+      - name: 'Install Python Dependencies'
+        run: |
+          pip install .
+
+      # 5. Run 'botc_tokens update'
+      #    Uses YOUR reminders file from the root of your repo
+      - name: 'Run: botc_tokens update'
+        run: |
+          botc_tokens update \
+            --output-dir ./inputs \
+            --reminders ./my_reminders.json
+
+      # 6. Run 'botc_tokens create'
+      #    Uses YOUR component packs from your repo
+      - name: 'Run: botc_tokens create'
+        run: |
+          botc_tokens create ./inputs \
+            --output-dir ./tokens \
+            --components ./my_component_packs
+
+      # 7. Run 'botc_tokens group'
+      #    Uses YOUR script file from the root of your repo
+      - name: 'Run: botc_tokens group'
+        run: |
+          botc_tokens group ./my_script.json \
+            --token-dir ./tokens \
+            --output-dir ./printables
+
+      # 8. Upload the final 'printables' folder as an artifact
+      - name: 'Upload Printable Artifacts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: 'printable-tokens'
+          path: ./printables/
